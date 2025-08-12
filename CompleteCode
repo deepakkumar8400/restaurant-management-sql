@@ -1,0 +1,134 @@
+-- =========================
+-- 1. Database Creation
+-- =========================
+CREATE DATABASE portfolio_db;
+USE portfolio_db;
+
+-- =========================
+-- 2. Table Creation
+-- =========================
+
+-- User Table
+CREATE TABLE users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    phone VARCHAR(15),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Projects Table
+CREATE TABLE projects (
+    project_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    tech_stack VARCHAR(255),
+    live_link VARCHAR(255),
+    repo_link VARCHAR(255),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Skills Table
+CREATE TABLE skills (
+    skill_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    skill_name VARCHAR(100) NOT NULL,
+    proficiency ENUM('Beginner','Intermediate','Advanced') DEFAULT 'Beginner',
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Messages Table (Contact Form)
+CREATE TABLE messages (
+    message_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    sender_name VARCHAR(100),
+    sender_email VARCHAR(150),
+    message TEXT,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- =========================
+-- 3. Insert Sample Data
+-- =========================
+INSERT INTO users (name, email, phone) VALUES
+('Deepak Kumar', 'deepak@example.com', '9876543210');
+
+INSERT INTO projects (user_id, title, description, tech_stack, live_link, repo_link) VALUES
+(1, 'Personal Portfolio Website', 'A responsive portfolio site to showcase my projects.', 'HTML, CSS, JavaScript', 'https://deepakportfolio.com', 'https://github.com/deepakkumar/portfolio'),
+(1, 'Restaurant Management System', 'A web app for managing restaurant orders and inventory.', 'PHP, MySQL, Bootstrap', NULL, 'https://github.com/deepakkumar/restaurant');
+
+INSERT INTO skills (user_id, skill_name, proficiency) VALUES
+(1, 'HTML', 'Advanced'),
+(1, 'CSS', 'Advanced'),
+(1, 'JavaScript', 'Intermediate'),
+(1, 'PHP', 'Intermediate'),
+(1, 'MySQL', 'Intermediate');
+
+INSERT INTO messages (user_id, sender_name, sender_email, message) VALUES
+(1, 'Ravi Sharma', 'ravi@example.com', 'Your portfolio looks amazing!'),
+(1, 'Priya Singh', 'priya@example.com', 'I want to collaborate with you.');
+
+-- =========================
+-- 4. Example Queries
+-- =========================
+
+-- Get all projects for Deepak
+SELECT title, tech_stack FROM projects WHERE user_id = 1;
+
+-- Join projects with user
+SELECT u.name, p.title, p.tech_stack
+FROM users u
+JOIN projects p ON u.user_id = p.user_id;
+
+-- Count skills per user
+SELECT user_id, COUNT(*) AS total_skills FROM skills GROUP BY user_id;
+
+-- =========================
+-- 5. View Example
+-- =========================
+CREATE VIEW user_projects AS
+SELECT u.name, p.title, p.tech_stack
+FROM users u
+JOIN projects p ON u.user_id = p.user_id;
+
+-- =========================
+-- 6. Stored Procedure
+-- =========================
+DELIMITER //
+CREATE PROCEDURE GetUserPortfolio(IN uid INT)
+BEGIN
+    SELECT * FROM users WHERE user_id = uid;
+    SELECT * FROM projects WHERE user_id = uid;
+    SELECT * FROM skills WHERE user_id = uid;
+END //
+DELIMITER ;
+
+-- =========================
+-- 7. Trigger Example
+-- =========================
+DELIMITER //
+CREATE TRIGGER before_message_insert
+BEFORE INSERT ON messages
+FOR EACH ROW
+BEGIN
+    IF NEW.sender_email NOT LIKE '%@%' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid email format';
+    END IF;
+END //
+DELIMITER ;
+
+-- =========================
+-- 8. Index Example
+-- =========================
+CREATE INDEX idx_skillname ON skills(skill_name);
+
+-- =========================
+-- 9. Transaction Example
+-- =========================
+START TRANSACTION;
+INSERT INTO projects (user_id, title, description, tech_stack) VALUES
+(1, 'Blog Website', 'A personal blog site.', 'HTML, CSS, PHP');
+ROLLBACK; -- This will undo the insert
+COMMIT; -- Use instead of ROLLBACK to save changes
