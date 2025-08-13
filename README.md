@@ -18,5 +18,3 @@ The aim was to create a realistic dataset and use SQL queries to solve business-
 ## Tech Stack
 - **Database**: MySQL (can be adapted to PostgreSQL or SQL Server)
 - **Tools**: MySQL Workbench / phpMyAdmin
-
-## File Structure
